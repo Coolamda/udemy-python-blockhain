@@ -69,16 +69,13 @@ def verify_blockchain():
     return True
 
 
-def add_mine_reward():
-    reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
-    open_transactions.append(reward_transaction)
-
-
 def mine_block():
     last_block = blockchain[-1]
-    add_mine_reward()
+    reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
+    copied_transactions = open_transactions[:]
+    copied_transactions.append(reward_transaction)
     hashed_block = hash_block(last_block)
-    block = create_block(hashed_block, len(blockchain), open_transactions)
+    block = create_block(hashed_block, len(blockchain), copied_transactions)
     blockchain.append(block)
     return True
 
