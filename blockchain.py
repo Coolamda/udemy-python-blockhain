@@ -70,8 +70,8 @@ def verify_blockchain():
 
 
 def add_mine_reward():
-    tx_mining = create_transaction("MINING", owner, MINING_REWARD)
-    open_transactions.append(tx_mining)
+    reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
+    open_transactions.append(reward_transaction)
 
 
 def mine_block():
