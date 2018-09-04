@@ -110,6 +110,10 @@ def get_balance(participant):
     return amount_received - amount_sent
 
 
+def check_transactions_validity():
+    return any([verify_transaction(tx) for tx in open_transactions])
+
+
 waiting_for_input = True
 
 while waiting_for_input:
@@ -118,6 +122,7 @@ while waiting_for_input:
     print("2) Mine open transactions.")
     print("3) Print out blockchain.")
     print("4) Print out participants.")
+    print("5) Check open transactions for validity.")
     print("q) Quit program.")
     print("h) Manipulate blockchain.")
 
@@ -136,6 +141,8 @@ while waiting_for_input:
         print_blockchain_elements()
     elif choice == "4":
         print(participants)
+    elif choice == "5":
+        print(check_transactions_validity())
     elif choice == "q":
         waiting_for_input = False
     elif choice == "h":
