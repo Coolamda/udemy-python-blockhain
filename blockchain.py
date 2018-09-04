@@ -1,12 +1,25 @@
-genesis_block = {
-    "previous_hash": "",
-    "index": 0,
-    "transactions": []
-}
+def create_block(hash, index, transactions):
+    return {
+        "previous_hash": hash,
+        "index": index,
+        "transactions": transactions
+    }
+
+
+MINING_REWARD = 10
+owner = "Liam"
+genesis_block = create_block("", 0, [])
 blockchain = [genesis_block]
 open_transactions = []
-owner = "Liam"
 participants = {owner}
+
+
+def create_transaction(sender, recipient, amount):
+    return {
+        "sender": sender,
+        "recipient": recipient,
+        "amount": amount
+    }
 
 
 def hash_block(block):
@@ -20,11 +33,7 @@ def get_last_blockchain_value():
 
 
 def add_transaction(sender, recipient, amount):
-    transaction = {
-        "sender": sender,
-        "recipient": recipient,
-        "amount": amount
-    }
+    transaction = create_transaction(sender, recipient, amount)
     open_transactions.append(transaction)
     participants.add(sender)
     participants.add(recipient)
@@ -58,26 +67,33 @@ def verify_blockchain():
 
 def mine_block():
     last_block = blockchain[-1]
+    add_transaction("MINING", owner, MINING_REWARD)
     hashed_block = hash_block(last_block)
-    block = {
-        "previous_hash": hashed_block,
-        "index": len(blockchain),
-        "transactions": open_transactions
-    }
+    block = create_block(hashed_block, len(blockchain), open_transactions)
     blockchain.append(block)
+    return True
 
 
 def hack_first_block():
     if len(blockchain) > 0:
-        blockchain[0] = {
-            "previous_hash": "",
-            "index": 0,
-            "transactions": [{
-                "sender": "Marlena",
-                "recipient": "Liam",
-                "amount": 420
-            }]
-        }
+        hack_transaction = create_transaction("Marlena", "Liam", 420)
+        blockchain[0] = create_block("", 0, [hack_transaction])
+
+
+def get_balance(participant):
+    tx_sender = [[tx["amount"] for tx in block["transactions"] if tx["sender"] == participant]
+                 for block in blockchain]
+    amount_sent = 0
+    for tx in tx_sender:
+        if len(tx) > 0:
+            amount_sent += tx[0]
+    tx_recipient = [[tx["amount"] for tx in block["transactions"]
+                     if tx["recipient"] == participant] for block in blockchain]
+    amount_received = 0
+    for tx in tx_recipient:
+        if len(tx) > 0:
+            amount_received += tx[0]
+    return amount_received - amount_sent
 
 
 waiting_for_input = True
@@ -97,7 +113,8 @@ while waiting_for_input:
         recipient, amount = get_transaction_value()
         add_transaction(owner, recipient, amount)
     elif choice == "2":
-        mine_block()
+        if mine_block():
+            open_transactions = []
     elif choice == "3":
         print_blockchain_elements()
     elif choice == "4":
@@ -111,6 +128,8 @@ while waiting_for_input:
     if not verify_blockchain():
         print("Blockchain is not valid!")
         waiting_for_input = False
+    print("Marlena:", get_balance("Marlena"))
+    print("Liam:", get_balance("Liam"))
 else:
     print("User left.")
 
