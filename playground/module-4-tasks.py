@@ -17,8 +17,7 @@ print(names)
 all_twenty = all([person["age"] > 20 for person in persons])
 print(all_twenty)
 
-copy_persons = persons[:]
-copy_persons[0] = persons[0].copy()
+copy_persons = [person.copy() for person in persons]
 copy_persons[0]["name"] = "Maximilian"
 print(copy_persons[0])
 
