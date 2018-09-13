@@ -1,20 +1,30 @@
 from functools import reduce
+from hashlib import sha256
+import json
 
 
-def create_block(hash, index, transactions):
+def create_block(hash, index, transactions, proof):
     return {
         "previous_hash": hash,
         "index": index,
-        "transactions": transactions
+        "transactions": transactions,
+        "proof": proof
     }
 
 
 MINING_REWARD = 10
 owner = "Liam"
-genesis_block = create_block("", 0, [])
+genesis_block = create_block("", 0, [], 100)
 blockchain = [genesis_block]
 open_transactions = []
 participants = {owner}
+
+
+def valid_proof(transactions, last_hash, proof):
+    guess = (str(transactions) + last_hash + str(proof)).encode()
+    guess_hash = sha256(guess).hexdigest()
+    print(guess_hash)
+    return guess_hash[0:2] == "00"
 
 
 def create_transaction(sender, recipient, amount):
@@ -26,7 +36,16 @@ def create_transaction(sender, recipient, amount):
 
 
 def hash_block(block):
-    return "-".join([str(block[key]) for key in block])
+    return sha256(json.dumps(block).encode()).hexdigest()
+
+
+def proof_of_work():
+    last_block = blockchain[-1]
+    hashed_block = hash_block(last_block)
+    proof = 0
+    while not valid_proof(open_transactions, hashed_block, proof):
+        proof += 1
+    return proof
 
 
 def get_last_blockchain_value():
@@ -68,16 +87,21 @@ def verify_blockchain():
             continue
         if block["previous_hash"] != hash_block(blockchain[index - 1]):
             return False
+        if not valid_proof(block["transactions"][:-1], block["previous_hash"], block["proof"]):
+            print("Proof of Work invalid")
+            return False
     return True
 
 
 def mine_block():
     last_block = blockchain[-1]
+    hashed_block = hash_block(last_block)
+    proof = proof_of_work()
     reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
     copied_transactions = open_transactions[:]
     copied_transactions.append(reward_transaction)
-    hashed_block = hash_block(last_block)
-    block = create_block(hashed_block, len(blockchain), copied_transactions)
+    block = create_block(hashed_block, len(blockchain),
+                         copied_transactions, proof)
     blockchain.append(block)
     return True
 
@@ -85,7 +109,7 @@ def mine_block():
 def hack_first_block():
     if len(blockchain) > 0:
         hacked_transaction = create_transaction("Marlena", "Liam", 420)
-        blockchain[0] = create_block("", 0, [hacked_transaction])
+        blockchain[0] = create_block("", 0, [hacked_transaction], 100)
 
 
 def verify_transaction(transaction):
