@@ -1,17 +1,10 @@
 from functools import reduce
 from hashlib import sha256
-from collections import OrderedDict
-import json
 
-
-def create_block(hash, index, transactions, proof):
-    return {
-        "previous_hash": hash,
-        "index": index,
-        "transactions": transactions,
-        "proof": proof
-    }
-
+from hash_util import hash_block, hash_string_256
+from create_utils import create_block, create_transaction
+from tx_utils import calc_sum_of_tx
+from print_utils import print_balance, print_menu, print_blockchain_elements
 
 MINING_REWARD = 10
 owner = "Liam"
@@ -25,18 +18,6 @@ def valid_proof(transactions, last_hash, proof):
     guess = (str(transactions) + last_hash + str(proof)).encode()
     guess_hash = sha256(guess).hexdigest()
     return guess_hash[0:2] == "00"
-
-
-def create_transaction(sender, recipient, amount):
-    return OrderedDict([
-        ("sender", sender),
-        ("recipient", recipient),
-        ("amount", amount)
-    ])
-
-
-def hash_block(block):
-    return sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
 
 
 def proof_of_work():
@@ -72,13 +53,6 @@ def get_transaction_value():
 
 def get_user_choice():
     return input("Your choice: ")
-
-
-def print_blockchain_elements():
-    for index, block in enumerate(blockchain):
-        print("Block at index " + str(index) + ":", block)
-    else:
-        print("-" * 20)
 
 
 def verify_blockchain():
@@ -117,12 +91,6 @@ def verify_transaction(transaction):
     return sender_balance >= transaction["amount"]
 
 
-def calc_sum_of_tx(tx_sum, tx_amount):
-    if tx_amount:
-        return tx_sum + sum(tx_amount)
-    return tx_sum
-
-
 def all_tx_in_blockchain_of(participant, kind):
     return [[tx["amount"] for tx in block["transactions"] if tx[kind] == participant]
             for block in blockchain]
@@ -148,22 +116,10 @@ def check_transactions_validity():
     return any([verify_transaction(tx) for tx in open_transactions])
 
 
-def print_balance(user):
-    print("Balance of {}: {:6.2f}".format(user, get_balance(user)))
-
-
 waiting_for_input = True
 
 while waiting_for_input:
-    print("Please choose")
-    print("1) Add a new value to blockchain.")
-    print("2) Mine open transactions.")
-    print("3) Print out blockchain.")
-    print("4) Print out participants.")
-    print("5) Check open transactions for validity.")
-    print("q) Quit program.")
-    print("h) Manipulate blockchain.")
-
+    print_menu()
     choice = get_user_choice()
 
     if choice == "1":
@@ -176,7 +132,7 @@ while waiting_for_input:
         if mine_block():
             open_transactions = []
     elif choice == "3":
-        print_blockchain_elements()
+        print_blockchain_elements(blockchain)
     elif choice == "4":
         print(participants)
     elif choice == "5":
@@ -190,8 +146,8 @@ while waiting_for_input:
     if not verify_blockchain():
         print("Blockchain is not valid!")
         waiting_for_input = False
-    print_balance("Marlena")
-    print_balance("Liam")
+    print_balance("Marlena", get_balance("Marlena"))
+    print_balance("Liam", get_balance("Liam"))
 else:
     print("User left.")
 
