@@ -37,7 +37,6 @@ def get_last_blockchain_value():
 
 def add_transaction(sender, recipient, amount):
     transaction = create_transaction(sender, recipient, amount)
-    print(verify_transaction(transaction))
     if verify_transaction(transaction):
         open_transactions.append(transaction)
         participants.add(sender)
@@ -96,8 +95,8 @@ def verify_transaction(transaction):
 
 def calc_sum_of_tx(tx_sum, tx_amount):
     if tx_amount:
-        return tx_sum + tx_amount[0]
-    return 0
+        return tx_sum + sum(tx_amount)
+    return tx_sum
 
 
 def all_tx_in_blockchain_of(participant, kind):
