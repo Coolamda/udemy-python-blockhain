@@ -1,3 +1,6 @@
+from functools import reduce
+
+
 def create_block(hash, index, transactions):
     return {
         "previous_hash": hash,
@@ -82,8 +85,8 @@ def mine_block():
 
 def hack_first_block():
     if len(blockchain) > 0:
-        hack_transaction = create_transaction("Marlena", "Liam", 420)
-        blockchain[0] = create_block("", 0, [hack_transaction])
+        hacked_transaction = create_transaction("Marlena", "Liam", 420)
+        blockchain[0] = create_block("", 0, [hacked_transaction])
 
 
 def verify_transaction(transaction):
@@ -91,27 +94,39 @@ def verify_transaction(transaction):
     return sender_balance >= transaction["amount"]
 
 
-def get_balance(participant):
-    tx_sender = [[tx["amount"] for tx in block["transactions"] if tx["sender"] == participant]
-                 for block in blockchain]
+def calc_sum_of_tx(tx_sum, tx_amount):
+    if tx_amount:
+        return tx_sum + tx_amount[0]
+    return 0
+
+
+def all_tx_in_blockchain_of(participant, kind):
+    return [[tx["amount"] for tx in block["transactions"] if tx[kind] == participant]
+            for block in blockchain]
+
+
+def get_all_tx_of(participant):
+    tx_sender = all_tx_in_blockchain_of(participant, "sender")
     open_tx_sender = [tx["amount"]
                       for tx in open_transactions if tx["sender"] == participant]
     tx_sender.append(open_tx_sender)
-    amount_sent = 0
-    for tx in tx_sender:
-        if len(tx) > 0:
-            amount_sent += tx[0]
-    tx_recipient = [[tx["amount"] for tx in block["transactions"]
-                     if tx["recipient"] == participant] for block in blockchain]
-    amount_received = 0
-    for tx in tx_recipient:
-        if len(tx) > 0:
-            amount_received += tx[0]
+    tx_recipient = all_tx_in_blockchain_of(participant, "recipient")
+    return tx_sender, tx_recipient
+
+
+def get_balance(participant):
+    tx_sender, tx_recipient = get_all_tx_of(participant)
+    amount_sent = reduce(calc_sum_of_tx, tx_sender, 0)
+    amount_received = reduce(calc_sum_of_tx, tx_recipient, 0)
     return amount_received - amount_sent
 
 
 def check_transactions_validity():
     return any([verify_transaction(tx) for tx in open_transactions])
+
+
+def print_balance(user):
+    print("Balance of {}: {:6.2f}".format(user, get_balance(user)))
 
 
 waiting_for_input = True
@@ -152,8 +167,8 @@ while waiting_for_input:
     if not verify_blockchain():
         print("Blockchain is not valid!")
         waiting_for_input = False
-    print("Marlena:", get_balance("Marlena"))
-    print("Liam:", get_balance("Liam"))
+    print_balance("Marlena")
+    print_balance("Liam")
 else:
     print("User left.")
 
