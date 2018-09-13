@@ -1,5 +1,6 @@
 from functools import reduce
 from hashlib import sha256
+from collections import OrderedDict
 import json
 
 
@@ -23,20 +24,19 @@ participants = {owner}
 def valid_proof(transactions, last_hash, proof):
     guess = (str(transactions) + last_hash + str(proof)).encode()
     guess_hash = sha256(guess).hexdigest()
-    print(guess_hash)
     return guess_hash[0:2] == "00"
 
 
 def create_transaction(sender, recipient, amount):
-    return {
-        "sender": sender,
-        "recipient": recipient,
-        "amount": amount
-    }
+    return OrderedDict([
+        ("sender", sender),
+        ("recipient", recipient),
+        ("amount", amount)
+    ])
 
 
 def hash_block(block):
-    return sha256(json.dumps(block).encode()).hexdigest()
+    return sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
 
 
 def proof_of_work():
