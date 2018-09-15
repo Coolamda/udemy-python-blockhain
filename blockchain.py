@@ -13,7 +13,6 @@ MINING_REWARD = 10
 owner = "Liam"
 blockchain = []
 open_transactions = []
-participants = {owner}
 
 
 def save_data():
@@ -162,8 +161,6 @@ while waiting_for_input:
     elif choice == "3":
         print_blockchain_elements(blockchain)
     elif choice == "4":
-        print(participants)
-    elif choice == "5":
         print(check_transactions_validity())
     elif choice == "q":
         waiting_for_input = False

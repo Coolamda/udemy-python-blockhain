@@ -7,8 +7,7 @@ def print_menu():
     print("1) Add a new value to blockchain.")
     print("2) Mine open transactions.")
     print("3) Print out blockchain.")
-    print("4) Print out participants.")
-    print("5) Check open transactions for validity.")
+    print("4) Check open transactions for validity.")
     print("q) Quit program.")
 
 
