@@ -9,29 +9,38 @@ from print_utils import print_balance, print_menu, print_blockchain_elements
 
 MINING_REWARD = 10
 owner = "Liam"
-genesis_block = create_block("", 0, [], 100)
-blockchain = [genesis_block]
+blockchain = []
 open_transactions = []
 participants = {owner}
 
 
 def save_data():
-    with open("blockchain.txt", mode="w") as f:
-        f.write(json.dumps(blockchain))
-        f.write("\n")
-        f.write(json.dumps(open_transactions))
+    try:
+        with open("blockchain.txt", mode="w") as f:
+            f.write(json.dumps(blockchain))
+            f.write("\n")
+            f.write(json.dumps(open_transactions))
+    except IOError:
+        print("Savin failed!")
 
 
 def load_data():
-    with open("blockchain.txt", mode="r") as f:
-        file_contents = f.readlines()
-        global blockchain
-        global open_transactions
-        json_blockchain = json.loads(file_contents[0][:-1])
-        json_open_transaction = json.loads(file_contents[1])
-        blockchain = list(map(convert_block, json_blockchain))
-        open_transactions = list(
-            map(convert_transaction, json_open_transaction))
+    global blockchain
+    global open_transactions
+    try:
+        with open("blockchain.txt", mode="r") as f:
+            file_contents = f.readlines()
+            global blockchain
+            global open_transactions
+            json_blockchain = json.loads(file_contents[0][:-1])
+            json_open_transaction = json.loads(file_contents[1])
+            blockchain = list(map(convert_block, json_blockchain))
+            open_transactions = list(
+                map(convert_transaction, json_open_transaction))
+    except (IOError, IndexError):
+        genesis_block = create_block("", 0, [], 100)
+        blockchain = [genesis_block]
+        open_transactions = []
 
 
 load_data()
