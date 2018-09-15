@@ -3,8 +3,9 @@ from functools import reduce
 from hashlib import sha256
 
 from block import Block
+from transaction import Transaction
 from hash_util import hash_block, hash_string_256
-from create_utils import create_transaction, convert_block, convert_transaction
+from create_utils import convert_block
 from tx_utils import calc_sum_of_tx
 from print_utils import print_balance, print_menu, print_blockchain_elements
 
@@ -18,10 +19,12 @@ participants = {owner}
 def save_data():
     try:
         with open("blockchain.txt", mode="w") as f:
-            saveable_blockchain = [block.__dict__ for block in blockchain]
+            saveable_blockchain = [block.__dict__ for block in [
+                Block(block_el.previous_hash, block_el.index, [tx.__dict__ for tx in block_el.transactions], block_el.proof) for block_el in blockchain]]
             f.write(json.dumps(saveable_blockchain))
             f.write("\n")
-            f.write(json.dumps(open_transactions))
+            saveable_transactions = [tx.__dict__ for tx in open_transactions]
+            f.write(json.dumps(saveable_transactions))
     except IOError:
         print("Savin failed!")
 
@@ -37,8 +40,8 @@ def load_data():
             json_blockchain = json.loads(file_contents[0][:-1])
             json_open_transaction = json.loads(file_contents[1])
             blockchain = list(map(convert_block, json_blockchain))
-            open_transactions = list(
-                map(convert_transaction, json_open_transaction))
+            open_transactions = [Transaction(
+                tx["sender"], tx["recipient"], tx["amount"]) for tx in json_open_transaction]
     except (IOError, IndexError):
         genesis_block = Block("", 0, [], 100)
         blockchain = [genesis_block]
@@ -49,7 +52,8 @@ load_data()
 
 
 def valid_proof(transactions, last_hash, proof):
-    guess = (str(transactions) + last_hash + str(proof)).encode()
+    guess = (str([tx.to_ordered_dict()
+                  for tx in transactions]) + last_hash + str(proof)).encode()
     guess_hash = sha256(guess).hexdigest()
     return guess_hash[0:2] == "00"
 
@@ -70,11 +74,9 @@ def get_last_blockchain_value():
 
 
 def add_transaction(sender, recipient, amount):
-    transaction = create_transaction(sender, recipient, amount)
+    transaction = Transaction(sender, recipient, amount)
     if verify_transaction(transaction):
         open_transactions.append(transaction)
-        participants.add(sender)
-        participants.add(recipient)
         save_data()
         return True
     return False
@@ -106,7 +108,7 @@ def mine_block():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
     proof = proof_of_work()
-    reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
+    reward_transaction = Transaction("MINING", owner, MINING_REWARD)
     copied_transactions = open_transactions[:]
     copied_transactions.append(reward_transaction)
     block = Block(hashed_block, len(blockchain), copied_transactions, proof)
@@ -115,21 +117,18 @@ def mine_block():
 
 
 def verify_transaction(transaction):
-    sender_balance = get_balance(transaction["sender"])
-    return sender_balance >= transaction["amount"]
-
-
-def all_tx_in_blockchain_of(participant, kind):
-    return [[tx["amount"] for tx in block.transactions if tx[kind] == participant]
-            for block in blockchain]
+    sender_balance = get_balance(transaction.sender)
+    return sender_balance >= transaction.amount
 
 
 def get_all_tx_of(participant):
-    tx_sender = all_tx_in_blockchain_of(participant, "sender")
-    open_tx_sender = [tx["amount"]
-                      for tx in open_transactions if tx["sender"] == participant]
+    tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant]
+                 for block in blockchain]
+    open_tx_sender = [tx.amount
+                      for tx in open_transactions if tx.sender == participant]
     tx_sender.append(open_tx_sender)
-    tx_recipient = all_tx_in_blockchain_of(participant, "recipient")
+    tx_recipient = [[tx.amount for tx in block.transactions if tx.recipient == participant]
+                    for block in blockchain]
     return tx_sender, tx_recipient
 
 
