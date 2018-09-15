@@ -10,7 +10,6 @@ def print_menu():
     print("4) Print out participants.")
     print("5) Check open transactions for validity.")
     print("q) Quit program.")
-    print("h) Manipulate blockchain.")
 
 
 def print_blockchain_elements(blockchain):

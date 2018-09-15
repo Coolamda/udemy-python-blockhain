@@ -1,13 +1,6 @@
 from collections import OrderedDict
 
-
-def create_block(hash, index, transactions, proof):
-    return {
-        "previous_hash": hash,
-        "index": index,
-        "transactions": transactions,
-        "proof": proof
-    }
+from block import Block
 
 
 def create_transaction(sender, recipient, amount):
@@ -25,7 +18,4 @@ def convert_transaction(tx):
 def convert_block(block):
     updated_transactions = list(
         map(convert_transaction, block["transactions"]))
-    return create_block(block["previous_hash"],
-                        block["index"],
-                        updated_transactions,
-                        block["proof"])
+    return Block(block["previous_hash"], block["index"], updated_transactions, block["proof"])

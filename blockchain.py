@@ -2,8 +2,9 @@ import json
 from functools import reduce
 from hashlib import sha256
 
+from block import Block
 from hash_util import hash_block, hash_string_256
-from create_utils import create_block, create_transaction, convert_block, convert_transaction
+from create_utils import create_transaction, convert_block, convert_transaction
 from tx_utils import calc_sum_of_tx
 from print_utils import print_balance, print_menu, print_blockchain_elements
 
@@ -17,7 +18,8 @@ participants = {owner}
 def save_data():
     try:
         with open("blockchain.txt", mode="w") as f:
-            f.write(json.dumps(blockchain))
+            saveable_blockchain = [block.__dict__ for block in blockchain]
+            f.write(json.dumps(saveable_blockchain))
             f.write("\n")
             f.write(json.dumps(open_transactions))
     except IOError:
@@ -38,7 +40,7 @@ def load_data():
             open_transactions = list(
                 map(convert_transaction, json_open_transaction))
     except (IOError, IndexError):
-        genesis_block = create_block("", 0, [], 100)
+        genesis_block = Block("", 0, [], 100)
         blockchain = [genesis_block]
         open_transactions = []
 
@@ -92,9 +94,9 @@ def verify_blockchain():
     for index, block in enumerate(blockchain):
         if index == 0:
             continue
-        if block["previous_hash"] != hash_block(blockchain[index - 1]):
+        if block.previous_hash != hash_block(blockchain[index - 1]):
             return False
-        if not valid_proof(block["transactions"][:-1], block["previous_hash"], block["proof"]):
+        if not valid_proof(block.transactions[:-1], block.previous_hash, block.proof):
             print("Proof of Work invalid")
             return False
     return True
@@ -107,16 +109,9 @@ def mine_block():
     reward_transaction = create_transaction("MINING", owner, MINING_REWARD)
     copied_transactions = open_transactions[:]
     copied_transactions.append(reward_transaction)
-    block = create_block(hashed_block, len(blockchain),
-                         copied_transactions, proof)
+    block = Block(hashed_block, len(blockchain), copied_transactions, proof)
     blockchain.append(block)
     return True
-
-
-def hack_first_block():
-    if len(blockchain) > 0:
-        hacked_transaction = create_transaction("Marlena", "Liam", 420)
-        blockchain[0] = create_block("", 0, [hacked_transaction], 100)
 
 
 def verify_transaction(transaction):
@@ -125,7 +120,7 @@ def verify_transaction(transaction):
 
 
 def all_tx_in_blockchain_of(participant, kind):
-    return [[tx["amount"] for tx in block["transactions"] if tx[kind] == participant]
+    return [[tx["amount"] for tx in block.transactions if tx[kind] == participant]
             for block in blockchain]
 
 
@@ -173,8 +168,6 @@ while waiting_for_input:
         print(check_transactions_validity())
     elif choice == "q":
         waiting_for_input = False
-    elif choice == "h":
-        hack_first_block()
     else:
         print("Input is invalid.")
     if not verify_blockchain():
