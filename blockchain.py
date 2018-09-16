@@ -4,7 +4,8 @@ from hashlib import sha256
 
 from block import Block
 from transaction import Transaction
-from hash_util import hash_block, hash_string_256
+from verification import Verification
+from hash_util import hash_block
 from create_utils import convert_block
 from tx_utils import calc_sum_of_tx
 from print_utils import print_balance, print_menu, print_blockchain_elements
@@ -50,18 +51,12 @@ def load_data():
 load_data()
 
 
-def valid_proof(transactions, last_hash, proof):
-    guess = (str([tx.to_ordered_dict()
-                  for tx in transactions]) + last_hash + str(proof)).encode()
-    guess_hash = sha256(guess).hexdigest()
-    return guess_hash[0:2] == "00"
-
-
 def proof_of_work():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
     proof = 0
-    while not valid_proof(open_transactions, hashed_block, proof):
+    verifier = Verification()
+    while not verifier.valid_proof(open_transactions, hashed_block, proof):
         proof += 1
     return proof
 
@@ -74,7 +69,8 @@ def get_last_blockchain_value():
 
 def add_transaction(sender, recipient, amount):
     transaction = Transaction(sender, recipient, amount)
-    if verify_transaction(transaction):
+    verifier = Verification()
+    if verifier.verify_transaction(transaction, get_balance):
         open_transactions.append(transaction)
         save_data()
         return True
@@ -91,18 +87,6 @@ def get_user_choice():
     return input("Your choice: ")
 
 
-def verify_blockchain():
-    for index, block in enumerate(blockchain):
-        if index == 0:
-            continue
-        if block.previous_hash != hash_block(blockchain[index - 1]):
-            return False
-        if not valid_proof(block.transactions[:-1], block.previous_hash, block.proof):
-            print("Proof of Work invalid")
-            return False
-    return True
-
-
 def mine_block():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
@@ -113,11 +97,6 @@ def mine_block():
     block = Block(hashed_block, len(blockchain), copied_transactions, proof)
     blockchain.append(block)
     return True
-
-
-def verify_transaction(transaction):
-    sender_balance = get_balance(transaction.sender)
-    return sender_balance >= transaction.amount
 
 
 def get_all_tx_of(participant):
@@ -136,10 +115,6 @@ def get_balance(participant):
     amount_sent = reduce(calc_sum_of_tx, tx_sender, 0)
     amount_received = reduce(calc_sum_of_tx, tx_recipient, 0)
     return amount_received - amount_sent
-
-
-def check_transactions_validity():
-    return any([verify_transaction(tx) for tx in open_transactions])
 
 
 waiting_for_input = True
@@ -161,12 +136,15 @@ while waiting_for_input:
     elif choice == "3":
         print_blockchain_elements(blockchain)
     elif choice == "4":
-        print(check_transactions_validity())
+        verifier = Verification()
+        print(verifier.check_transactions_validity(
+            open_transactions, get_balance))
     elif choice == "q":
         waiting_for_input = False
     else:
         print("Input is invalid.")
-    if not verify_blockchain():
+    verifier = Verification()
+    if not verifier.verify_blockchain(blockchain):
         print("Blockchain is not valid!")
         waiting_for_input = False
     print_balance("Marlena", get_balance("Marlena"))
