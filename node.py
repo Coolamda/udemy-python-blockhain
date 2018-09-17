@@ -53,15 +53,13 @@ class Node:
             elif choice == "3":
                 self.print_blockchain_elements()
             elif choice == "4":
-                verifier = Verification()
-                print(verifier.check_transactions_validity(
+                print(Verification.check_transactions_validity(
                     self.blockchain.open_transactions, self.blockchain.get_balance))
             elif choice == "q":
                 waiting_for_input = False
             else:
                 print("Input is invalid.")
-            verifier = Verification()
-            if not verifier.verify_blockchain(self.blockchain.chain):
+            if not Verification.verify_blockchain(self.blockchain.chain):
                 print("Blockchain is not valid!")
                 waiting_for_input = False
             self.print_balance()
