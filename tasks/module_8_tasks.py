@@ -7,7 +7,7 @@ class Food:
         return f"Name: {self.name}; Kind: {self.kind}"
 
     def describe(self):
-        print(f"Name: {self.name}; Kind: {self.kind}")
+        print(self)
 
 
 class Meat(Food):
@@ -21,4 +21,4 @@ class Fruit(Food):
 
 
 banana = Fruit("banana", "fruity")
-print(banana)
+banana.describe()
