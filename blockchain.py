@@ -15,13 +15,18 @@ MINING_REWARD = 10
 class Blockchain:
     def __init__(self, hosting_node_id):
         genesis_block = Block("", 0, [], 100)
-        self.__chain = [genesis_block]
+        self.chain = [genesis_block]
         self.__open_transactions = []
         self.hosting_node_id = hosting_node_id
         self.load_data()
 
-    def get_chain(self):
+    @property
+    def chain(self):
         return self.__chain[:]
+
+    @chain.setter
+    def chain(self, val):
+        self.__chain = val
 
     def get_open_transactions(self):
         return self.__open_transactions[:]
@@ -32,7 +37,7 @@ class Blockchain:
                 file_contents = f.readlines()
                 json_blockchain = json.loads(file_contents[0][:-1])
                 json_open_transaction = json.loads(file_contents[1])
-                self.__chain = list(map(convert_block, json_blockchain))
+                self.chain = list(map(convert_block, json_blockchain))
                 self.__open_transactions = [Transaction(
                     tx["sender"], tx["recipient"], tx["amount"]) for tx in json_open_transaction]
         except (IOError, IndexError):
@@ -83,6 +88,8 @@ class Blockchain:
         block = Block(hashed_block, len(self.__chain),
                       copied_transactions, proof)
         self.__chain.append(block)
+        self.__open_transactions = []
+        self.save_data()
         return True
 
     def get_all_tx_of(self, participant):
