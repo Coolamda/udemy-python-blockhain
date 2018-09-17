@@ -10,14 +10,15 @@ from tx_utils import calc_sum_of_tx
 from print_utils import print_balance
 
 MINING_REWARD = 10
-owner = "Liam"
 
 
 class Blockchain:
-    def __init__(self):
+    def __init__(self, hosting_node_id):
         genesis_block = Block("", 0, [], 100)
         self.chain = [genesis_block]
         self.open_transactions = []
+        self.hosting_node_id = hosting_node_id
+        self.load_data()
 
     def load_data(self):
         try:
@@ -42,7 +43,7 @@ class Blockchain:
                     tx.__dict__ for tx in self.open_transactions]
                 f.write(json.dumps(saveable_transactions))
         except IOError:
-            print("Savin failed!")
+            print("Saving failed!")
 
     def proof_of_work(self):
         last_block = self.chain[-1]
@@ -61,7 +62,7 @@ class Blockchain:
     def add_transaction(self, sender, recipient, amount):
         transaction = Transaction(sender, recipient, amount)
         verifier = Verification()
-        if verifier.verify_transaction(transaction, get_balance):
+        if verifier.verify_transaction(transaction, self.get_balance):
             self.open_transactions.append(transaction)
             self.save_data()
             return True
@@ -71,7 +72,8 @@ class Blockchain:
         last_block = self.chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
-        reward_transaction = Transaction("MINING", owner, MINING_REWARD)
+        reward_transaction = Transaction(
+            "MINING", self.hosting_node_id, MINING_REWARD)
         copied_transactions = self.open_transactions[:]
         copied_transactions.append(reward_transaction)
         block = Block(hashed_block, len(self.chain),
@@ -89,15 +91,8 @@ class Blockchain:
                         for block in self.chain]
         return tx_sender, tx_recipient
 
-
-load_data()
-
-
-def get_balance(participant):
-    tx_sender, tx_recipient = get_all_tx_of(participant)
-    amount_sent = reduce(calc_sum_of_tx, tx_sender, 0)
-    amount_received = reduce(calc_sum_of_tx, tx_recipient, 0)
-    return amount_received - amount_sent
-
-
-print("Done!")
+    def get_balance(self):
+        tx_sender, tx_recipient = self.get_all_tx_of(self.hosting_node_id)
+        amount_sent = reduce(calc_sum_of_tx, tx_sender, 0)
+        amount_received = reduce(calc_sum_of_tx, tx_recipient, 0)
+        return amount_received - amount_sent

@@ -1,21 +1,27 @@
+from uuid import uuid4
+
+from blockchain import Blockchain
 from verification import Verification
 
 
 class Node:
     def __init__(self):
-        self.blockchain = []
+        # self.id = str(uuid4())
+        self.id = "Liam"
+        self.blockchain = Blockchain(self.id)
 
     def get_user_choice(self):
         return input("Your choice: ")
 
     def print_blockchain_elements(self):
-        for index, block in enumerate(self.blockchain):
+        for index, block in enumerate(self.blockchain.chain):
             print("Block at index " + str(index) + ":", block)
         else:
             print("-" * 20)
 
-    def print_balance(self, user, balance):
-        print("Balance of {}: {:6.2f}".format(user, balance))
+    def print_balance(self):
+        calculate_balance = self.blockchain.get_balance()
+        print("Balance of {}: {:6.2f}".format(self.id, calculate_balance))
 
     def get_transaction_value(self):
         recipient = input("Enter the recipient of the transaction: ")
@@ -34,29 +40,34 @@ class Node:
             choice = self.get_user_choice()
             if choice == "1":
                 recipient, amount = self.get_transaction_value()
-                if add_transaction(owner, recipient, amount):
+                if self.blockchain.add_transaction(self.id, recipient, amount):
                     print("Added Transaction.")
                 else:
                     print("Transaction failed.")
             elif choice == "2":
-                if mine_block():
-                    open_transactions = []
-                    save_data()
+                if self.blockchain.mine_block():
+                    self.blockchain.open_transactions = []
+                    self.blockchain.save_data()
+                else:
+                    print("Block not mined")
             elif choice == "3":
                 self.print_blockchain_elements()
             elif choice == "4":
                 verifier = Verification()
                 print(verifier.check_transactions_validity(
-                    open_transactions, get_balance))
+                    self.blockchain.open_transactions, self.blockchain.get_balance))
             elif choice == "q":
                 waiting_for_input = False
             else:
                 print("Input is invalid.")
             verifier = Verification()
-            if not verifier.verify_blockchain(self.blockchain):
+            if not verifier.verify_blockchain(self.blockchain.chain):
                 print("Blockchain is not valid!")
                 waiting_for_input = False
-            print_balance("Marlena", get_balance("Marlena"))
-            print_balance("Liam", get_balance("Liam"))
+            self.print_balance()
         else:
             print("User left.")
+
+
+node = Node()
+node.listen_for_user_input()
