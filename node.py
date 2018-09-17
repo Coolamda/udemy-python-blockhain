@@ -14,7 +14,7 @@ class Node:
         return input("Your choice: ")
 
     def print_blockchain_elements(self):
-        for index, block in enumerate(self.blockchain.chain):
+        for index, block in enumerate(self.blockchain.get_chain()):
             print("Block at index " + str(index) + ":", block)
         else:
             print("-" * 20)
@@ -46,7 +46,7 @@ class Node:
                     print("Transaction failed.")
             elif choice == "2":
                 if self.blockchain.mine_block():
-                    self.blockchain.open_transactions = []
+                    self.blockchain.get_open_transactions = []
                     self.blockchain.save_data()
                 else:
                     print("Block not mined")
@@ -54,12 +54,12 @@ class Node:
                 self.print_blockchain_elements()
             elif choice == "4":
                 print(Verification.check_transactions_validity(
-                    self.blockchain.open_transactions, self.blockchain.get_balance))
+                    self.blockchain.get_open_transactions, self.blockchain.get_balance))
             elif choice == "q":
                 waiting_for_input = False
             else:
                 print("Input is invalid.")
-            if not Verification.verify_blockchain(self.blockchain.chain):
+            if not Verification.verify_blockchain(self.blockchain.get_chain()):
                 print("Blockchain is not valid!")
                 waiting_for_input = False
             self.print_balance()
