@@ -12,5 +12,5 @@ class Block(Printable):
     @staticmethod
     def convert_block(block):
         updated_transactions = [Transaction(
-            tx["sender"], tx["recipient"], tx["amount"]) for tx in block["transactions"]]
+            tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in block["transactions"]]
         return Block(block["previous_hash"], block["index"], updated_transactions, block["proof"])

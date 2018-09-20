@@ -36,7 +36,7 @@ class Blockchain:
                 json_open_transaction = json.loads(file_contents[1])
                 self.chain = list(map(Block.convert_block, json_blockchain))
                 self.__open_transactions = [Transaction(
-                    tx["sender"], tx["recipient"], tx["amount"]) for tx in json_open_transaction]
+                    tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in json_open_transaction]
         except (IOError, IndexError):
             pass
 
@@ -67,10 +67,9 @@ class Blockchain:
         return self.__chain[-1]
 
     def add_transaction(self, sender, recipient, signature, amount):
-        print(signature)
         if self.hosting_node_id == None:
             return False
-        transaction = Transaction(sender, recipient, amount)
+        transaction = Transaction(sender, recipient, signature, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
@@ -84,7 +83,7 @@ class Blockchain:
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
         reward_transaction = Transaction(
-            "MINING", self.hosting_node_id, MINING_REWARD)
+            "MINING", self.hosting_node_id, '', MINING_REWARD)
         copied_transactions = self.__open_transactions[:]
         copied_transactions.append(reward_transaction)
         block = Block(hashed_block, len(self.__chain),
