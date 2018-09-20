@@ -117,3 +117,10 @@ class Blockchain:
         if tx_amount:
             return tx_sum + sum(tx_amount)
         return tx_sum
+
+    def convert_blocks_to_serializable_data(self):
+        dict_chain = [block.__dict__.copy() for block in self.chain]
+        for dict_block in dict_chain:
+            dict_block["transactions"] = [tx.__dict__.copy()
+                                          for tx in dict_block["transactions"]]
+        return dict_chain
