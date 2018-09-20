@@ -3,6 +3,7 @@ from functools import reduce
 
 from block import Block
 from transaction import Transaction
+from wallet import Wallet
 from utility.verification import Verification
 from utility.hash_util import hash_block
 
@@ -70,6 +71,9 @@ class Blockchain:
         if self.hosting_node_id == None:
             return False
         transaction = Transaction(sender, recipient, signature, amount)
+        if not Wallet.verify_transaction(transaction):
+            print("NOT VALID TRANSACTION")
+            return False
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
@@ -88,6 +92,9 @@ class Blockchain:
         copied_transactions.append(reward_transaction)
         block = Block(hashed_block, len(self.__chain),
                       copied_transactions, proof)
+        for transaction in block.transactions:
+            if not Wallet.verify_transaction(transaction):
+                return False
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
