@@ -6,7 +6,8 @@ from utility.verification import Verification
 class Node:
     def __init__(self):
         self.wallet = Wallet()
-        self.blockchain = None
+        self.wallet.create_keys()
+        self.blockchain = Blockchain(self.wallet.public_key)
 
     def get_user_choice(self):
         return input("Your choice: ")
@@ -37,6 +38,7 @@ class Node:
             print("4) Check open transactions for validity.")
             print("5) Create wallet.")
             print("6) Load wallet.")
+            print("7) Save wallet.")
             print("q) Quit program.")
             choice = self.get_user_choice()
             if choice == "1":
@@ -57,7 +59,10 @@ class Node:
                 self.wallet.create_keys()
                 self.blockchain = Blockchain(self.wallet.public_key)
             elif choice == "6":
-                pass
+                self.wallet.load_wallet()
+                self.blockchain = Blockchain(self.wallet.public_key)
+            elif choice == "7":
+                self.wallet.save_keys()
             elif choice == "q":
                 waiting_for_input = False
             else:
