@@ -10,6 +10,39 @@ blockchain = Blockchain(wallet.public_key)
 CORS(app)
 
 
+@app.route("/wallet", methods=["POST"])
+def create_keys():
+    wallet.create_keys()
+    if wallet.save_keys():
+        global blockchain
+        blockchain = Blockchain(wallet.public_key)
+        response = {
+            "public_key": wallet.public_key,
+            "private_key": wallet.private_key
+        }
+        return jsonify(response), 201
+    response = {
+        "message": "Saving the keys failed."
+    }
+    return jsonify(response), 500
+
+
+@app.route("/wallet", methods=["GET"])
+def load_keys():
+    if wallet.load_wallet():
+        global blockchain
+        blockchain = Blockchain(wallet.public_key)
+        response = {
+            "public_key": wallet.public_key,
+            "private_key": wallet.private_key
+        }
+        return jsonify(response), 201
+    response = {
+        "message": "Loading the keys failed."
+    }
+    return jsonify(response), 500
+
+
 @app.route("/", methods=["GET"])
 def get_ui():
     return "App works!"
