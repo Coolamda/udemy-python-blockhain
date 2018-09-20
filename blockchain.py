@@ -3,11 +3,8 @@ from functools import reduce
 
 from block import Block
 from transaction import Transaction
-from verification import Verification
-from hash_util import hash_block
-from create_utils import convert_block
-from tx_utils import calc_sum_of_tx
-from print_utils import print_balance
+from utility.verification import Verification
+from utility.hash_util import hash_block
 
 MINING_REWARD = 10
 
@@ -37,7 +34,7 @@ class Blockchain:
                 file_contents = f.readlines()
                 json_blockchain = json.loads(file_contents[0][:-1])
                 json_open_transaction = json.loads(file_contents[1])
-                self.chain = list(map(convert_block, json_blockchain))
+                self.chain = list(map(Block.convert_block, json_blockchain))
                 self.__open_transactions = [Transaction(
                     tx["sender"], tx["recipient"], tx["amount"]) for tx in json_open_transaction]
         except (IOError, IndexError):
@@ -104,6 +101,11 @@ class Blockchain:
 
     def get_balance(self):
         tx_sender, tx_recipient = self.get_all_tx_of(self.hosting_node_id)
-        amount_sent = reduce(calc_sum_of_tx, tx_sender, 0)
-        amount_received = reduce(calc_sum_of_tx, tx_recipient, 0)
+        amount_sent = reduce(self.calc_sum_of_tx, tx_sender, 0)
+        amount_received = reduce(self.calc_sum_of_tx, tx_recipient, 0)
         return amount_received - amount_sent
+
+    def calc_sum_of_tx(self, tx_sum, tx_amount):
+        if tx_amount:
+            return tx_sum + sum(tx_amount)
+        return tx_sum

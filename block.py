@@ -1,4 +1,5 @@
-from printable import Printable
+from utility.printable import Printable
+from transaction import Transaction
 
 
 class Block(Printable):
@@ -7,3 +8,9 @@ class Block(Printable):
         self.index = index
         self.transactions = transactions
         self.proof = proof
+
+    @staticmethod
+    def convert_block(block):
+        updated_transactions = [Transaction(
+            tx["sender"], tx["recipient"], tx["amount"]) for tx in block["transactions"]]
+        return Block(block["previous_hash"], block["index"], updated_transactions, block["proof"])

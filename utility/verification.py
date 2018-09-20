@@ -1,6 +1,6 @@
 from hashlib import sha256
 
-from hash_util import hash_block
+from utility.hash_util import hash_block
 
 
 class Verification:
