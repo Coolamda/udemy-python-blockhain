@@ -9,8 +9,10 @@ class Block(Printable):
         self.transactions = transactions
         self.proof = proof
 
-    @staticmethod
-    def convert_block(block):
-        updated_transactions = [Transaction(
-            tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in block["transactions"]]
-        return Block(block["previous_hash"], block["index"], updated_transactions, block["proof"])
+    def convert_block(self):
+        return {
+            "previous_hash": self.previous_hash,
+            "index": self.index,
+            "transactions": [tx.__dict__.copy() for tx in self.transactions],
+            "proof": self.proof
+        }

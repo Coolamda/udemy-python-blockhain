@@ -78,8 +78,9 @@ class Blockchain:
         return False
 
     def mine_block(self):
+        print(self.hosting_node_id)
         if self.hosting_node_id == None:
-            return False
+            return None
         last_block = self.__chain[-1]
         hashed_block = hash_block(last_block)
         proof = self.proof_of_work()
@@ -88,14 +89,14 @@ class Blockchain:
         copied_transactions = self.__open_transactions[:]
         for transaction in copied_transactions:
             if not Wallet.verify_transaction(transaction):
-                return False
+                return None
         copied_transactions.append(reward_transaction)
         block = Block(hashed_block, len(self.__chain),
                       copied_transactions, proof)
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
-        return True
+        return block
 
     def get_all_tx_of(self, participant):
         tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant]
@@ -119,8 +120,5 @@ class Blockchain:
         return tx_sum
 
     def convert_blocks_to_serializable_data(self):
-        dict_chain = [block.__dict__.copy() for block in self.chain]
-        for dict_block in dict_chain:
-            dict_block["transactions"] = [tx.__dict__.copy()
-                                          for tx in dict_block["transactions"]]
+        dict_chain = [block.convert_block() for block in self.chain]
         return dict_chain
