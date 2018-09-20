@@ -11,7 +11,7 @@ class Wallet:
     def load_wallet(self):
         pass
 
-    def create_wallet(self):
+    def create_keys(self):
         private_key, public_key = self.generate_keys()
         self.private_key = private_key
         self.public_key = public_key

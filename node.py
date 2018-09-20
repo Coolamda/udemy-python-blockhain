@@ -1,14 +1,15 @@
 from uuid import uuid4
 
+from wallet import Wallet
 from blockchain import Blockchain
 from utility.verification import Verification
 
 
 class Node:
     def __init__(self):
-        # self.id = str(uuid4())
-        self.id = "Liam"
-        self.blockchain = Blockchain(self.id)
+        # self.wallet.public_key = str(uuid4())
+        self.wallet = Wallet()
+        self.blockchain = Blockchain(self.wallet.public_key)
 
     def get_user_choice(self):
         return input("Your choice: ")
@@ -21,7 +22,8 @@ class Node:
 
     def print_balance(self):
         calculate_balance = self.blockchain.get_balance()
-        print("Balance of {}: {:6.2f}".format(self.id, calculate_balance))
+        print("Balance of {}: {:6.2f}".format(
+            self.wallet.public_key, calculate_balance))
 
     def get_transaction_value(self):
         recipient = input("Enter the recipient of the transaction: ")
@@ -36,11 +38,13 @@ class Node:
             print("2) Mine open transactions.")
             print("3) Print out blockchain.")
             print("4) Check open transactions for validity.")
+            print("5) Create wallet.")
+            print("6) Load wallet.")
             print("q) Quit program.")
             choice = self.get_user_choice()
             if choice == "1":
                 recipient, amount = self.get_transaction_value()
-                if self.blockchain.add_transaction(self.id, recipient, amount):
+                if self.blockchain.add_transaction(self.wallet.public_key, recipient, amount):
                     print("Added Transaction.")
                 else:
                     print("Transaction failed.")
@@ -51,6 +55,10 @@ class Node:
             elif choice == "4":
                 print(Verification.check_transactions_validity(
                     self.blockchain.get_open_transactions, self.blockchain.get_balance))
+            elif choice == "5":
+                self.wallet.create_keys()
+            elif choice == "6":
+                pass
             elif choice == "q":
                 waiting_for_input = False
             else:
