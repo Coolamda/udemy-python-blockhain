@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from wallet import Wallet
 from blockchain import Blockchain
 from utility.verification import Verification
@@ -7,9 +5,8 @@ from utility.verification import Verification
 
 class Node:
     def __init__(self):
-        # self.wallet.public_key = str(uuid4())
         self.wallet = Wallet()
-        self.blockchain = Blockchain(self.wallet.public_key)
+        self.blockchain = None
 
     def get_user_choice(self):
         return input("Your choice: ")
@@ -49,7 +46,8 @@ class Node:
                 else:
                     print("Transaction failed.")
             elif choice == "2":
-                self.blockchain.mine_block()
+                if not self.blockchain.mine_block():
+                    print("Mining failed. Got a wallet?")
             elif choice == "3":
                 self.print_blockchain_elements()
             elif choice == "4":
@@ -57,6 +55,7 @@ class Node:
                     self.blockchain.get_open_transactions, self.blockchain.get_balance))
             elif choice == "5":
                 self.wallet.create_keys()
+                self.blockchain = Blockchain(self.wallet.public_key)
             elif choice == "6":
                 pass
             elif choice == "q":
