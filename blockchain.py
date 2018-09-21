@@ -35,21 +35,30 @@ class Blockchain:
                 file_contents = f.readlines()
                 json_blockchain = json.loads(file_contents[0][:-1])
                 json_open_transaction = json.loads(file_contents[1])
-                self.chain = list(map(Block.convert_block, json_blockchain))
+                self.save_json_to_chain(json_blockchain)
                 self.__open_transactions = [Transaction(
                     tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in json_open_transaction]
         except (IOError, IndexError):
             pass
 
+    def save_json_to_chain(self, json_chain):
+        updated_blockchain = []
+        for block in json_chain:
+            converted_tx = [Transaction(
+                tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
+            updated_block = Block(
+                block['index'], block['previous_hash'], converted_tx, block['proof'])
+            updated_blockchain.append(updated_block)
+        self.chain = updated_blockchain
+
     def save_data(self):
         try:
             with open("blockchain.txt", mode="w") as f:
-                saveable_blockchain = [block.__dict__ for block in [
-                    Block(block_el.previous_hash, block_el.index, [tx.__dict__ for tx in block_el.transactions], block_el.proof) for block_el in self.__chain]]
+                saveable_blockchain = self.convert_blocks_to_serializable_data()
                 f.write(json.dumps(saveable_blockchain))
                 f.write("\n")
                 saveable_transactions = [
-                    tx.__dict__ for tx in self.__open_transactions]
+                    tx.__dict__.copy() for tx in self.__open_transactions]
                 f.write(json.dumps(saveable_transactions))
         except IOError:
             print("Saving failed!")
@@ -109,6 +118,8 @@ class Blockchain:
         return tx_sender, tx_recipient
 
     def get_balance(self):
+        if self.hosting_node_id == None:
+            return None
         tx_sender, tx_recipient = self.get_all_tx_of(self.hosting_node_id)
         amount_sent = reduce(self.calc_sum_of_tx, tx_sender, 0)
         amount_received = reduce(self.calc_sum_of_tx, tx_recipient, 0)
