@@ -49,7 +49,8 @@ class Blockchain:
                 self.save_json_to_chain(json_blockchain)
                 self.__open_transactions = [Transaction(
                     tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in json_open_transaction]
-                self.__peer_nodes = json.loads(set(file_contents[2]))
+                peer_nodes = json.loads(file_contents[2])
+                self.__peer_nodes = set(peer_nodes)
         except (IOError, IndexError):
             pass
 
@@ -145,3 +146,6 @@ class Blockchain:
     def remove_peer_node(self, node):
         self.__peer_nodes.discard(node)
         self.save_data()
+
+    def get_peer_nodes(self):
+        return list(self.__peer_nodes)
