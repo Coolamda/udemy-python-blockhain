@@ -132,5 +132,12 @@ def add_transaction():
     return jsonify(response), 201
 
 
+@app.route("/transactions", methods=["GET"])
+def get_open_transactions():
+    transactions = blockchain.get_open_transactions()
+    dict_transactions = [tx.__dict__.copy() for tx in transactions]
+    return jsonify(dict_transactions), 200
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=4000)
