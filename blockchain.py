@@ -16,6 +16,7 @@ class Blockchain:
         self.chain = [genesis_block]
         self.__open_transactions = []
         self.hosting_node_id = hosting_node_id
+        self.__peer_nodes = set()
         self.load_data()
 
     @property
@@ -29,18 +30,6 @@ class Blockchain:
     def get_open_transactions(self):
         return self.__open_transactions[:]
 
-    def load_data(self):
-        try:
-            with open("blockchain.txt", mode="r") as f:
-                file_contents = f.readlines()
-                json_blockchain = json.loads(file_contents[0][:-1])
-                json_open_transaction = json.loads(file_contents[1])
-                self.save_json_to_chain(json_blockchain)
-                self.__open_transactions = [Transaction(
-                    tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in json_open_transaction]
-        except (IOError, IndexError):
-            pass
-
     def save_json_to_chain(self, json_chain):
         updated_blockchain = []
         for block in json_chain:
@@ -51,6 +40,19 @@ class Blockchain:
             updated_blockchain.append(updated_block)
         self.chain = updated_blockchain
 
+    def load_data(self):
+        try:
+            with open("blockchain.txt", mode="r") as f:
+                file_contents = f.readlines()
+                json_blockchain = json.loads(file_contents[0][:-1])
+                json_open_transaction = json.loads(file_contents[1][:-1])
+                self.save_json_to_chain(json_blockchain)
+                self.__open_transactions = [Transaction(
+                    tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in json_open_transaction]
+                self.__peer_nodes = json.loads(set(file_contents[2]))
+        except (IOError, IndexError):
+            pass
+
     def save_data(self):
         try:
             with open("blockchain.txt", mode="w") as f:
@@ -60,6 +62,8 @@ class Blockchain:
                 saveable_transactions = [
                     tx.__dict__.copy() for tx in self.__open_transactions]
                 f.write(json.dumps(saveable_transactions))
+                f.write("\n")
+                f.write(json.dumps(list(self.__peer_nodes)))
         except IOError:
             print("Saving failed!")
 
@@ -133,3 +137,11 @@ class Blockchain:
     def convert_blocks_to_serializable_data(self):
         dict_chain = [block.convert_block() for block in self.chain]
         return dict_chain
+
+    def add_peer_node(self, node):
+        self.__peer_nodes.add(node)
+        self.save_data()
+
+    def remove_peer_node(self, node):
+        self.__peer_nodes.discard(node)
+        self.save_data()
