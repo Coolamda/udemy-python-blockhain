@@ -47,7 +47,7 @@ class Blockchain:
             converted_tx = [Transaction(
                 tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
             updated_block = Block(
-                block['index'], block['previous_hash'], converted_tx, block['proof'])
+                block['previous_hash'], block['index'], converted_tx, block['proof'])
             updated_blockchain.append(updated_block)
         self.chain = updated_blockchain
 
