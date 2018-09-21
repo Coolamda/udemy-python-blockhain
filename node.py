@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from wallet import Wallet
@@ -88,6 +88,48 @@ def get_balance():
         "wallet_set_up": wallet.public_key != None
     }
     return jsonify(response), 500
+
+
+@app.route("/transaction", methods=["POST"])
+def add_transaction():
+    if wallet.public_key == None:
+        response = {
+            "message": "No wallet set up."
+        }
+        return jsonify(response), 400
+    values = request.get_json()
+    if not values:
+        response = {
+            "message": "No data found."
+        }
+        return jsonify(response), 400
+    required_fields = ["recipient", "amount"]
+    if not all(field in values for field in required_fields):
+        response = {
+            "message": "Required data is missing."
+        }
+        return jsonify(response), 400
+    recipient = values["recipient"]
+    amount = values["amount"]
+    signature = wallet.sign_transaction(recipient, amount)
+    success = blockchain.add_transaction(
+        wallet.public_key, recipient, signature, amount)
+    if not success:
+        response = {
+            "message": "Creating a transactions failed."
+        }
+        return jsonify(response), 500
+    response = {
+        "message": "Successfully added transaction.",
+        "transaction": {
+            "sender": wallet.public_key,
+            "recipient": recipient,
+            "signature": signature,
+            "amount": amount
+        },
+        "funds": blockchain.get_balance()
+    }
+    return jsonify(response), 201
 
 
 if __name__ == "__main__":
