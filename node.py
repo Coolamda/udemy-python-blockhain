@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 from wallet import Wallet
@@ -8,6 +8,11 @@ app = Flask(__name__)
 wallet = Wallet()
 blockchain = Blockchain(wallet.public_key)
 CORS(app)
+
+
+@app.route("/", methods=["GET"])
+def get_ui():
+    return send_from_directory("ui", "node.html")
 
 
 @app.route("/wallet", methods=["POST"])
@@ -43,11 +48,6 @@ def load_keys():
         "message": "Loading the keys failed."
     }
     return jsonify(response), 500
-
-
-@app.route("/", methods=["GET"])
-def get_ui():
-    return "App works!"
 
 
 @app.route("/chain", methods=["GET"])
@@ -140,4 +140,4 @@ def get_open_transactions():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=4000)
+    app.run(host="0.0.0.0", port=3000)
