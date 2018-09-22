@@ -83,7 +83,7 @@ class Blockchain:
             return None
         return self.__chain[-1]
 
-    def add_transaction(self, sender, recipient, signature, amount):
+    def add_transaction(self, sender, recipient, signature, amount, is_receiving=False):
         if self.public_key == None:
             return False
         transaction = Transaction(sender, recipient, signature, amount)
@@ -91,15 +91,16 @@ class Blockchain:
             self.__open_transactions.append(transaction)
             self.save_data()
             dict_transaction = transaction.__dict__.copy()
-            for node in self.__peer_nodes:
-                url = f"http://{node}/broadcast-transaction"
-                try:
-                    response = requests.post(url, json=dict_transaction)
-                    if response.status_code == 400 or response.status_code == 500:
-                        print("Transaction declined, needs resolving.")
-                        return False
-                except requests.exceptions.ConnectionError:
-                    continue
+            if not is_receiving:
+                for node in self.__peer_nodes:
+                    url = f"http://{node}/broadcast-transaction"
+                    try:
+                        response = requests.post(url, json=dict_transaction)
+                        if response.status_code == 400 or response.status_code == 500:
+                            print("Transaction declined, needs resolving.")
+                            return False
+                    except requests.exceptions.ConnectionError:
+                        continue
             return True
         return False
 
@@ -134,10 +135,14 @@ class Blockchain:
                         for block in self.__chain]
         return tx_sender, tx_recipient
 
-    def get_balance(self):
-        if self.public_key == None:
-            return None
-        tx_sender, tx_recipient = self.get_all_tx_of(self.public_key)
+    def get_balance(self, sender=None):
+        if sender == None:
+            if self.public_key == None:
+                return None
+            participant = self.public_key
+        else:
+            participant = sender
+        tx_sender, tx_recipient = self.get_all_tx_of(participant)
         amount_sent = reduce(self.calc_sum_of_tx, tx_sender, 0)
         amount_received = reduce(self.calc_sum_of_tx, tx_recipient, 0)
         return amount_received - amount_sent
