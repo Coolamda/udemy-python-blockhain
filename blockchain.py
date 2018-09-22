@@ -1,4 +1,5 @@
 import json
+import requests
 from functools import reduce
 
 from block import Block
@@ -89,6 +90,16 @@ class Blockchain:
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
             self.save_data()
+            dict_transaction = transaction.__dict__.copy()
+            for node in self.__peer_nodes:
+                url = f"http://{node}/broadcast-transaction"
+                try:
+                    response = requests.post(url, json=dict_transaction)
+                    if response.status_code == 400 or response.status_code == 500:
+                        print("Transaction declined, needs resolving.")
+                        return False
+                except requests.exceptions.ConnectionError:
+                    continue
             return True
         return False
 
