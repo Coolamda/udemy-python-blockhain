@@ -56,7 +56,7 @@ def load_keys():
 
 @app.route("/chain", methods=["GET"])
 def get_chain():
-    serializable_chain = blockchain.convert_blocks_to_serializable_data()
+    serializable_chain = blockchain.to_serializable_data()
     return jsonify(serializable_chain), 200
 
 
@@ -69,7 +69,7 @@ def mine():
         return jsonify(response), 409
     block = blockchain.mine_block()
     print(block)
-    if block != None:
+    if block is not None:
         dict_block = block.__dict__.copy()
         dict_block['transactions'] = [
             tx.__dict__ for tx in dict_block['transactions']]
@@ -81,7 +81,7 @@ def mine():
         return jsonify(response), 201
     response = {
         "message": "Adding a new block failed.",
-        "wallet_set_up": wallet.public_key != None
+        "wallet_set_up": wallet.public_key is not None
     }
     return jsonify(response), 500
 
@@ -89,7 +89,7 @@ def mine():
 @app.route("/balance", methods=["GET"])
 def get_balance():
     balance = blockchain.get_balance()
-    if balance != None:
+    if balance is not None:
         response = {
             "message": "Fetched balance successfully.",
             "funds": balance
@@ -97,7 +97,7 @@ def get_balance():
         return jsonify(response), 200
     response = {
         "message": "Loading balance failed.",
-        "wallet_set_up": wallet.public_key != None
+        "wallet_set_up": wallet.public_key is not None
     }
     return jsonify(response), 500
 
@@ -117,7 +117,11 @@ def broadcast_transaction():
         }
         return jsonify(response), 400
     success = blockchain.add_transaction(
-        values["sender"], values["recipient"], values["signature"], values["amount"], is_receiving=True)
+        values["sender"],
+        values["recipient"],
+        values["signature"],
+        values["amount"],
+        is_receiving=True)
     if not success:
         response = {
             "message": "Creating a transaction failed."
@@ -182,7 +186,7 @@ def resolve_conflicts():
 
 @app.route("/transaction", methods=["POST"])
 def add_transaction():
-    if wallet.public_key == None:
+    if wallet.public_key is None:
         response = {
             "message": "No wallet set up."
         }
@@ -253,7 +257,7 @@ def add_node():
 
 @app.route("/node/<node_url>", methods=["DELETE"])
 def remove_node(node_url):
-    if node_url == "" or node_url == None:
+    if node_url == "" or node_url is None:
         response = {
             "message": "No node found."
         }

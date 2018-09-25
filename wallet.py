@@ -24,7 +24,7 @@ class Wallet:
             return False
 
     def save_keys(self):
-        if self.public_key != None and self.private_key != None:
+        if self.public_key is not None and self.private_key is not None:
             try:
                 with open(f"wallet-{self.node_id}.txt", mode="w") as f:
                     f.write(self.public_key)
