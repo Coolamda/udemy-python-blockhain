@@ -166,6 +166,20 @@ def broadcast_block():
     return jsonify(response), 409
 
 
+@app.route("/resolve-conflicts", methods=["POST"])
+def resolve_conflicts():
+    replaced = blockchain.resolve()
+    if replaced:
+        response = {
+            "message": "Chain was replaced!"
+        }
+    else:
+        response = {
+            "message": "Local chain kept!"
+        }
+    return jsonify(response), 200
+
+
 @app.route("/transaction", methods=["POST"])
 def add_transaction():
     if wallet.public_key == None:

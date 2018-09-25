@@ -180,6 +180,32 @@ class Blockchain:
         amount_received = reduce(self.calc_sum_of_tx, tx_recipient, 0)
         return amount_received - amount_sent
 
+    def resolve(self):
+        winner_chain = self.chain
+        replace = False
+        for node in self.__peer_nodes:
+            url = f"http://{node}/chain"
+            try:
+                response = requests.get(url)
+                node_chain = response.json()
+                node_chain = [Block(block["previous_hash"], block["index"],
+                                    block["transactions"], block["proof"]) for block in node_chain]
+                for block in node_chain:
+                    updated_transaction = [Transaction(
+                        tx["sender"], tx["recipient"], tx["signature"], tx["amount"], ) for tx in block.transactions]
+                    block.transactions = updated_transaction
+                node_chain_length = len(node_chain)
+                local_chain_length = len(self.chain)
+                if node_chain_length > local_chain_length and Verification.verify_blockchain(node_chain):
+                    winner_chain = node_chain
+                    replace = True
+            except requests.exceptions.ConnectionError:
+                continue
+            self.resolve_conflicts = False
+            self.chain = winner_chain
+            self.save_data()
+            return replace
+
     def calc_sum_of_tx(self, tx_sum, tx_amount):
         if tx_amount:
             return tx_sum + sum(tx_amount)
