@@ -36,9 +36,9 @@ class Blockchain:
         updated_blockchain = []
         for block in json_chain:
             converted_tx = [Transaction(
-                tx['sender'], tx['recipient'], tx['signature'], tx['amount']) for tx in block['transactions']]
+                tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in block["transactions"]]
             updated_block = Block(
-                block['previous_hash'], block['index'], converted_tx, block['proof'])
+                block["previous_hash"], block["index"], converted_tx, block["proof"])
             updated_blockchain.append(updated_block)
         self.chain = updated_blockchain
 
@@ -84,8 +84,6 @@ class Blockchain:
         return self.__chain[-1]
 
     def add_transaction(self, sender, recipient, signature, amount, is_receiving=False):
-        if self.public_key == None:
-            return False
         transaction = Transaction(sender, recipient, signature, amount)
         if Verification.verify_transaction(transaction, self.get_balance):
             self.__open_transactions.append(transaction)
@@ -105,7 +103,6 @@ class Blockchain:
         return False
 
     def mine_block(self):
-        print(self.public_key)
         if self.public_key == None:
             return None
         last_block = self.__chain[-1]
@@ -123,19 +120,30 @@ class Blockchain:
         self.__chain.append(block)
         self.__open_transactions = []
         self.save_data()
+        for node in self.__peer_nodes:
+            dict_block = block.__dict__.copy()
+            dict_block["transactions"] = [
+                tx.__dict__ for tx in dict_block["transactions"]]
+            url = f"http://{node}/broadcast-block"
+            try:
+                response = requests.post(url, json={"block": dict_block})
+                if response.status_code == 400 or response.status_code == 500:
+                    print("Block declined, needs resolving.")
+            except requests.exceptions.ConnectionError:
+                continue
         return block
 
     def add_block(self, block):
         transactions = [Transaction(
             tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in block["transactions"]]
         proof_check = Verification.valid_proof(
-            transactions, block["previous_hash"], block["proof"])
+            transactions[:-1], block["previous_hash"], block["proof"])
         hash_check = hash_block(self.chain[-1]) == block["previous_hash"]
         if not proof_check or not hash_check:
             return False
-        block = Block(block["previous_hash"], block["index"],
-                      block["transactions"], block["proof"])
-        self.chain.append(block)
+        converted_block = Block(block["previous_hash"], block["index"],
+                                transactions, block["proof"])
+        self.__chain.append(converted_block)
         self.save_data()
         return True
 
@@ -167,8 +175,7 @@ class Blockchain:
         return tx_sum
 
     def convert_blocks_to_serializable_data(self):
-        dict_chain = [block.convert_block() for block in self.chain]
-        return dict_chain
+        return [block.__dict__ for block in [Block(block_el.previous_hash, block_el.index, [tx.__dict__ for tx in block_el.transactions], block_el.proof) for block_el in self.__chain]]
 
     def add_peer_node(self, node):
         self.__peer_nodes.add(node)

@@ -63,8 +63,11 @@ def get_chain():
 @app.route("/mine", methods=["POST"])
 def mine():
     block = blockchain.mine_block()
+    print(block)
     if block != None:
-        dict_block = block.convert_block()
+        dict_block = block.__dict__.copy()
+        dict_block['transactions'] = [
+            tx.__dict__ for tx in dict_block['transactions']]
         response = {
             "message": "Block added successfuly",
             "block": dict_block,
@@ -136,8 +139,16 @@ def broadcast_block():
         return jsonify(response), 400
     block = values["block"]
     last_block = blockchain.chain[-1]
-    if block.index == last_block.index + 1:
-        blockchain.add_block(block)
+    if block["index"] == last_block.index + 1:
+        if blockchain.add_block(block):
+            response = {
+                "message": "Block added."
+            }
+            return jsonify(response), 201
+        response = {
+            "message": "Could not add block."
+        }
+        return jsonify(response), 500
     elif block.index > last_block.index:
         pass
     else:
