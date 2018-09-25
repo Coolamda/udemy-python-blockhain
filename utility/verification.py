@@ -34,3 +34,7 @@ class Verification:
     @classmethod
     def check_transactions_validity(cls, open_transactions, get_balance):
         return any([cls.verify_transaction(tx, get_balance, False) for tx in open_transactions])
+
+    @staticmethod
+    def compare_dict_tx_and_obj_tx(itx, opentx):
+        return opentx.sender == itx["sender"] and opentx.recipient == itx["recipient"] and opentx.signature == itx["signature"] and opentx.amount == itx["amount"]

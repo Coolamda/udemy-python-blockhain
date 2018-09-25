@@ -144,6 +144,14 @@ class Blockchain:
         converted_block = Block(block["previous_hash"], block["index"],
                                 transactions, block["proof"])
         self.__chain.append(converted_block)
+        copied_transactions = self.__open_transactions[:]
+        for itx in block["transactions"]:
+            for opentx in copied_transactions:
+                if Verification.compare_dict_tx_and_obj_tx(itx, opentx):
+                    try:
+                        self.__open_transactions.remove(opentx)
+                    except ValueError:
+                        print("Item was already removed")
         self.save_data()
         return True
 
