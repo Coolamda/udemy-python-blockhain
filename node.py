@@ -62,6 +62,11 @@ def get_chain():
 
 @app.route("/mine", methods=["POST"])
 def mine():
+    if blockchain.resolve_conflicts:
+        response = {
+            "message": "Resolve conflicts first, block not added!"
+        }
+        return jsonify(response), 409
     block = blockchain.mine_block()
     print(block)
     if block != None:
@@ -148,14 +153,17 @@ def broadcast_block():
         response = {
             "message": "Could not add block."
         }
-        return jsonify(response), 500
-    elif block.index > last_block.index:
-        pass
-    else:
-        response = {
-            "message": "Blockchain seems to be shorter, block not added to chain."
-        }
         return jsonify(response), 409
+    if block["index"] > last_block.index:
+        response = {
+            "message": "Blockchain seems to differ from local blockchain."
+        }
+        blockchain.resolve_conflicts = True
+        return jsonify(response), 200
+    response = {
+        "message": "Blockchain seems to be shorter, block not added to chain."
+    }
+    return jsonify(response), 409
 
 
 @app.route("/transaction", methods=["POST"])
