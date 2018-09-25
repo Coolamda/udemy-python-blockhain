@@ -203,6 +203,8 @@ class Blockchain:
                 continue
             self.resolve_conflicts = False
             self.chain = winner_chain
+            if replace:
+                self.__open_transactions == []
             self.save_data()
             return replace
 

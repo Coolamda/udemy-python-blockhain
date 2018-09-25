@@ -324,7 +324,6 @@
                         .then(function (response) {
                             vm.error = null;
                             vm.success = response.data.message;
-                            vm.funds = response.data.funds;
                         })
                         .catch(function (error) {
                             vm.success = null;
