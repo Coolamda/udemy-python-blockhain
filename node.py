@@ -121,6 +121,32 @@ def broadcast_transaction():
     return jsonify(response), 201
 
 
+@app.route("/broadcast-block", methods=["POST"])
+def broadcast_block():
+    values = request.get_json()
+    if not values:
+        response = {
+            "message": "No data found."
+        }
+        return jsonify(response), 400
+    if "block" not in values:
+        response = {
+            "message": "Required data is missing."
+        }
+        return jsonify(response), 400
+    block = values["block"]
+    last_block = blockchain.chain[-1]
+    if block.index == last_block.index + 1:
+        blockchain.add_block(block)
+    elif block.index > last_block.index:
+        pass
+    else:
+        response = {
+            "message": "Blockchain seems to be shorter, block not added to chain."
+        }
+        return jsonify(response), 409
+
+
 @app.route("/transaction", methods=["POST"])
 def add_transaction():
     if wallet.public_key == None:

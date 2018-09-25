@@ -125,6 +125,20 @@ class Blockchain:
         self.save_data()
         return block
 
+    def add_block(self, block):
+        transactions = [Transaction(
+            tx["sender"], tx["recipient"], tx["signature"], tx["amount"]) for tx in block["transactions"]]
+        proof_check = Verification.valid_proof(
+            transactions, block["previous_hash"], block["proof"])
+        hash_check = hash_block(self.chain[-1]) == block["previous_hash"]
+        if not proof_check or not hash_check:
+            return False
+        block = Block(block["previous_hash"], block["index"],
+                      block["transactions"], block["proof"])
+        self.chain.append(block)
+        self.save_data()
+        return True
+
     def get_all_tx_of(self, participant):
         tx_sender = [[tx.amount for tx in block.transactions if tx.sender == participant]
                      for block in self.__chain]
